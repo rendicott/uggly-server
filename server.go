@@ -1,6 +1,7 @@
 package main
 
 import (
+    "context"
     "net"
     "log"
     "google.golang.org/grpc"
@@ -17,34 +18,42 @@ var (
 	port       = flag.Int("port", 10000, "The server port")
 )
 
-type screenerServer struct {
-    pb.UnimplementedScreenerServer
-    screenSets map[string]*pb.Screens
+type feedServer struct {
+    pb.UnimplementedFeedServer
+    divBoxes *pb.DivBoxes
 }
 
-func (s screenerServer) GetScreens(ss *pb.ScreenSet, stream pb.Screener_GetScreensServer) (err error) {
-    // serve screens for requested screenset
-    for _, i := range(s.screenSets[ss.Name].Screens) {
-        if err := stream.Send(i); err != nil {
-            return err
-        }
-    }
-    return err
+func (s feedServer) GetDivs(ctx context.Context, ss *pb.FeedRequest) (boxes *pb.DivBoxes, err error) {
+    // serve divs for feedrequest
+    return s.divBoxes, err
 }
 
 
-func newServer() *screenerServer {
-	s := &screenerServer{screenSets: make(map[string]*pb.Screens)}
-    screens := pb.Screens{}
-    screen1 := pb.Screen{
-        Contents: "hello grpc world",
+func newServer() *feedServer {
+	s := &feedServer{}
+    s.divBoxes = &pb.DivBoxes{}
+    box1 := pb.DivBox{
+        Border: true,
+        BorderW: 1,
+        BorderChar: []rune("+")[0],
+        FillChar: []rune(" ")[0],
+        StartX: 8,
+        StartY: 8,
+        Width: 40,
+        Height: 8,
     }
-    screen2 := pb.Screen{
-        Contents: "happy to be here",
+    box2 := pb.DivBox{
+        Border: true,
+        BorderW: 1,
+        BorderChar: []rune("-")[0],
+        FillChar: []rune("*")[0],
+        StartX: 8,
+        StartY: 30,
+        Width: 10,
+        Height: 6,
     }
-    screens.Screens = append(screens.Screens, &screen1)
-    screens.Screens = append(screens.Screens, &screen2)
-    s.screenSets["one"] = &screens
+    s.divBoxes.Boxes = append(s.divBoxes.Boxes, &box1)
+    s.divBoxes.Boxes = append(s.divBoxes.Boxes, &box2)
 	return s
 }
 
@@ -58,6 +67,7 @@ func main() {
     var opts []grpc.ServerOption
     grpcServer := grpc.NewServer(opts...)
     s := newServer()
-    pb.RegisterScreenerServer(grpcServer, *s)
+    pb.RegisterFeedServer(grpcServer, *s)
     grpcServer.Serve(lis)
+    log.Println("Server listening")
 }
