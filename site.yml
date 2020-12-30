@@ -1,0 +1,27 @@
+---
+- name: basic
+  divBoxes:
+      - name: big
+        border:     true
+        borderW:    1
+        borderChar: "*"
+        fillChar:   " "
+        startX:     8
+        startY:     8
+        width:      40
+        height:     8
+      - name:       "little"
+        border:     true
+        borderW:    1
+        borderChar: "-"
+        fillChar:   "*"
+        startX:     8
+        startY:     30
+        width:      20
+        height:     6
+  elements:
+    - textBlobs:
+        - content: "hello world, how are ya now? Good n you?"
+          wrap: true
+          divNames:
+                  - "little"
