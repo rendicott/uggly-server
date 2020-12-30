@@ -21,17 +21,29 @@ var (
 type feedServer struct {
 	pb.UnimplementedFeedServer
 	divBoxes *pb.DivBoxes
+    elements *pb.Elements
 }
 
-func (s feedServer) GetDivs(ctx context.Context, ss *pb.FeedRequest) (boxes *pb.DivBoxes, err error) {
-	// serve divs for feedrequest
-	return s.divBoxes, err
+func (s feedServer) GetFeed(ctx context.Context, freq *pb.FeedRequest) (fresp *pb.FeedResponse, err error) {
+    fresp = &pb.FeedResponse{}
+    fresp.DivBoxes = &pb.DivBoxes{}
+    fresp.Elements = &pb.Elements{}
+    log.Printf("attaching feedserver divboxes of len %d to "+
+        "resp.DivBoxes with mem address %v",
+        len(s.divBoxes.Boxes), &fresp.DivBoxes)
+    fresp.DivBoxes = s.divBoxes
+    log.Printf("attaching feedserver elements of len %d to "+
+        "resp.Elements with mem address %v",
+        len(s.elements.TextBlobs), &fresp.Elements)
+    fresp.Elements = s.elements
+	return fresp, err
 }
 
 func newServer() *feedServer {
 	s := &feedServer{}
 	s.divBoxes = &pb.DivBoxes{}
 	box1 := pb.DivBox{
+        Name:       "big",
 		Border:     true,
 		BorderW:    1,
 		BorderChar: []rune("+")[0],
@@ -42,17 +54,26 @@ func newServer() *feedServer {
 		Height:     8,
 	}
 	box2 := pb.DivBox{
+        Name:       "little",
 		Border:     true,
 		BorderW:    1,
 		BorderChar: []rune("-")[0],
 		FillChar:   []rune("*")[0],
 		StartX:     8,
 		StartY:     30,
-		Width:      10,
+		Width:      20,
 		Height:     6,
 	}
 	s.divBoxes.Boxes = append(s.divBoxes.Boxes, &box1)
 	s.divBoxes.Boxes = append(s.divBoxes.Boxes, &box2)
+    s.elements = &pb.Elements{}
+    tb := pb.TextBlob{
+        Content: "hello world, how are ya now? Good n you?",
+        Wrap: true,
+        DivNames: []string{"little"},
+    }
+    s.elements.TextBlobs = append(s.elements.TextBlobs, &tb)
+    log.Printf("have textblobs of len %d\n", len(s.elements.TextBlobs))
 	return s
 }
 
