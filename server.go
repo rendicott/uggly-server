@@ -59,20 +59,20 @@ func newServer(sc *siteconfig.Sites) *feedServer {
 				Width:      sbox.Width,
 				Height:     sbox.Height,
 			}
-            if sbox.BorderSt != nil {
-                ubox.BorderSt = &pb.Style{
-                    Fg: sbox.BorderSt.Fg,
-                    Bg: sbox.BorderSt.Bg,
-                    Attr: sbox.BorderSt.Attr,
-                }
-            }
-            if sbox.FillSt != nil {
-                ubox.FillSt = &pb.Style{
-                    Fg: sbox.FillSt.Fg,
-                    Bg: sbox.FillSt.Bg,
-                    Attr: sbox.FillSt.Attr,
-                }
-            }
+			if sbox.BorderSt != nil {
+				ubox.BorderSt = &pb.Style{
+					Fg:   sbox.BorderSt.Fg,
+					Bg:   sbox.BorderSt.Bg,
+					Attr: sbox.BorderSt.Attr,
+				}
+			}
+			if sbox.FillSt != nil {
+				ubox.FillSt = &pb.Style{
+					Fg:   sbox.FillSt.Fg,
+					Bg:   sbox.FillSt.Bg,
+					Attr: sbox.FillSt.Attr,
+				}
+			}
 			fServer.divBoxes.Boxes = append(fServer.divBoxes.Boxes, &ubox)
 		}
 		log.Printf("have divboxes of len %d\n", len(fServer.divBoxes.Boxes))
