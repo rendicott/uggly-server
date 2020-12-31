@@ -4,12 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-    "os"
 	pb "github.com/rendicott/uggly"
 	"github.com/rendicott/uggly-server/siteconfig"
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"os"
 )
 
 var (
@@ -45,33 +45,53 @@ func (s feedServer) GetFeed(ctx context.Context, freq *pb.FeedRequest) (fresp *p
 func newServer(sc *siteconfig.Sites) *feedServer {
 	fServer := &feedServer{}
 	fServer.divBoxes = &pb.DivBoxes{}
-    log.Printf("convering config to uggly pb's for %d sites\n", len(sc.Sites))
+	log.Printf("convering config to uggly pb's for %d sites\n", len(sc.Sites))
 	for _, site := range sc.Sites {
-		for _, dbs := range site.DivBoxes {
-			box := pb.DivBox{
-				Name:       dbs.Name,
-				Border:     dbs.Border,
-				BorderW:    dbs.BorderW,
-				BorderChar: dbs.BorderChar,
-				FillChar:   dbs.FillChar,
-				StartX:     dbs.StartX,
-				StartY:     dbs.StartY,
-				Width:      dbs.Width,
-				Height:     dbs.Height,
+		for _, sbox := range site.DivBoxes {
+			ubox := pb.DivBox{
+				Name:       sbox.Name,
+				Border:     sbox.Border,
+				BorderW:    sbox.BorderW,
+				BorderChar: sbox.BorderChar,
+				FillChar:   sbox.FillChar,
+				StartX:     sbox.StartX,
+				StartY:     sbox.StartY,
+				Width:      sbox.Width,
+				Height:     sbox.Height,
 			}
-			fServer.divBoxes.Boxes = append(fServer.divBoxes.Boxes, &box)
+            if sbox.BorderSt != nil {
+                ubox.BorderSt = &pb.Style{
+                    Fg: sbox.BorderSt.Fg,
+                    Bg: sbox.BorderSt.Bg,
+                    Attr: sbox.BorderSt.Attr,
+                }
+            }
+            if sbox.FillSt != nil {
+                ubox.FillSt = &pb.Style{
+                    Fg: sbox.FillSt.Fg,
+                    Bg: sbox.FillSt.Bg,
+                    Attr: sbox.FillSt.Attr,
+                }
+            }
+			fServer.divBoxes.Boxes = append(fServer.divBoxes.Boxes, &ubox)
 		}
-        log.Printf("have divboxes of len %d\n", len(fServer.divBoxes.Boxes))
+		log.Printf("have divboxes of len %d\n", len(fServer.divBoxes.Boxes))
 		fServer.elements = &pb.Elements{}
-		for _, ele := range site.Elements {
-			for _, blob := range ele.TextBlobs {
-				tb := pb.TextBlob{
-					Content:  blob.Content,
-					Wrap:     blob.Wrap,
-					DivNames: blob.DivNames,
+		for _, sele := range site.Elements {
+			for _, sblob := range sele.TextBlobs {
+				ublob := pb.TextBlob{
+					Content:  sblob.Content,
+					Wrap:     sblob.Wrap,
+					DivNames: sblob.DivNames,
+				}
+				if sblob.Style != nil {
+					ublob.Style = &pb.Style{
+						Fg: sblob.Style.Fg,
+						Bg: sblob.Style.Bg,
+					}
 				}
 				fServer.elements.TextBlobs = append(
-                    fServer.elements.TextBlobs, &tb)
+					fServer.elements.TextBlobs, &ublob)
 			}
 		}
 	}
@@ -87,10 +107,10 @@ func main() {
 	}
 	// parse site config
 	sites, err := siteconfig.NewSiteConfig(*siteConfig)
-    if err != nil {
-        log.Printf("error parsing site config file: '%s'\n", err.Error())
-        os.Exit(1)
-    }
+	if err != nil {
+		log.Printf("error parsing site config file: '%s'\n", err.Error())
+		os.Exit(1)
+	}
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	s := newServer(sites)

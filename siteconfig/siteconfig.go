@@ -6,6 +6,12 @@ import (
 	"io/ioutil"
 )
 
+type style struct {
+    Fg   string
+    Bg   string
+    Attr string
+}
+
 // Sites contains configuration for the various
 // uggly sites that the server should run
 type Sites struct {
@@ -23,11 +29,14 @@ type Sites struct {
 			StartX     int32    `yaml:"startX"`
 			Width      int32    `yaml:"width"`
 			Height     int32    `yaml:"height"`
+            BorderSt   *style    `yaml:"borderSt"`
+            FillSt   *style    `yaml:"fillSt"`
 		} `yaml:"divBoxes"`
 		Elements []*struct {
 			TextBlobs []*struct {
 				Content  string   `yaml:"content"`
 				Wrap     bool     `yaml:"wrap"`
+                Style  *style `yaml:"style"`
 				DivNames []string `yaml:"divNames"`
 			} `yaml:"textBlobs"`
 		} `yaml:"elements"`

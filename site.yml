@@ -1,27 +1,44 @@
 ---
 - name: basic
   divBoxes:
-      - name: big
+      #      - name: big
+      #        border:     true
+      #        borderW:    1
+      #        borderChar: "*"
+      #        fillChar:   " "
+      #        startX:     8
+      #        startY:     8
+      #        width:      40
+      #        height:     8
+      #      - name:       "little"
+      #        border:     true
+      #        borderW:    1
+      #        borderChar: "-"
+      #        fillChar:   "*"
+      #        startX:     8
+      #        startY:     20
+      #        width:      22
+      #        height:     8
+      - name:       "medium"
         border:     true
         borderW:    1
-        borderChar: "*"
+        borderChar: "("
+        borderSt:
+            fg: "red"
+            bg: "black"
+            attr: 4
         fillChar:   " "
-        startX:     8
-        startY:     8
-        width:      40
+        startX:     31
+        startY:     20
+        width:      22
         height:     8
-      - name:       "little"
-        border:     true
-        borderW:    1
-        borderChar: "-"
-        fillChar:   "*"
-        startX:     8
-        startY:     30
-        width:      20
-        height:     6
   elements:
     - textBlobs:
-        - content: "hello world, how are ya now? Good n you?"
+        - content: "hello world, how are ya now? Good n you? Four score and seven years ago I went to the school yard to rough up some kids."
           wrap: true
+          style:
+              fg: "blue"
+              bg: "wheat"
+              attr: 4
           divNames:
-                  - "little"
+                  - "medium"

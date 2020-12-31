@@ -6,7 +6,9 @@ replace github.com/rendicott/uggly => ../uggly
 
 replace github.com/rendicott/uggly-server/siteconfig => ./siteconfig
 
+
 require (
+	github.com/gdamore/tcell v1.4.0 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/rendicott/uggly v0.0.1
 	github.com/rendicott/uggly-server/siteconfig v0.0.0
