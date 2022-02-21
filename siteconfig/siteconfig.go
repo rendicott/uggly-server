@@ -70,7 +70,9 @@ func NewSiteConfig(filename string) (*Sites, error) {
 						" length 1 so it can be parsed to rune")
 				return &sc, err
 			}
-			divbox.BorderChar = bcr[0]
+			if len(bcr) > 0 {
+				divbox.BorderChar = bcr[0]
+			}
 			divbox.FillChar = fcr[0]
 		}
 	}
