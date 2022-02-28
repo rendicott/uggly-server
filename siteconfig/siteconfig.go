@@ -12,35 +12,38 @@ type style struct {
 	Attr string
 }
 
+// Site contains all of the fields that can be parsed
+// from the siteconfig YAML for each site
+type Site struct {
+	Name     string `yaml:"name"`
+	DivBoxes []*struct {
+		Name             string `yaml:"name"`
+		Border           bool   `yaml:"border"`
+		BorderW          int32  `yaml:"borderW"`
+		BorderCharString string `yaml:"borderChar"`
+		FillCharString   string `yaml:"fillChar"`
+		BorderChar       rune
+		FillChar         rune
+		StartY           int32  `yaml:"startY"`
+		StartX           int32  `yaml:"startX"`
+		Width            int32  `yaml:"width"`
+		Height           int32  `yaml:"height"`
+		BorderSt         *style `yaml:"borderSt"`
+		FillSt           *style `yaml:"fillSt"` } `yaml:"divBoxes"`
+	Elements []*struct {
+		TextBlobs []*struct {
+			Content  string   `yaml:"content"`
+			Wrap     bool     `yaml:"wrap"`
+			Style    *style   `yaml:"style"`
+			DivNames []string `yaml:"divNames"`
+		} `yaml:"textBlobs"`
+	} `yaml:"elements"`
+}
+
 // Sites contains configuration for the various
 // uggly sites that the server should run
 type Sites struct {
-	Sites []*struct {
-		Name     string `yaml:"name"`
-		DivBoxes []*struct {
-			Name             string `yaml:"name"`
-			Border           bool   `yaml:"border"`
-			BorderW          int32  `yaml:"borderW"`
-			BorderCharString string `yaml:"borderChar"`
-			FillCharString   string `yaml:"fillChar"`
-			BorderChar       rune
-			FillChar         rune
-			StartY           int32  `yaml:"startY"`
-			StartX           int32  `yaml:"startX"`
-			Width            int32  `yaml:"width"`
-			Height           int32  `yaml:"height"`
-			BorderSt         *style `yaml:"borderSt"`
-			FillSt           *style `yaml:"fillSt"`
-		} `yaml:"divBoxes"`
-		Elements []*struct {
-			TextBlobs []*struct {
-				Content  string   `yaml:"content"`
-				Wrap     bool     `yaml:"wrap"`
-				Style    *style   `yaml:"style"`
-				DivNames []string `yaml:"divNames"`
-			} `yaml:"textBlobs"`
-		} `yaml:"elements"`
-	}
+	Sites []*Site
 }
 
 // NewSiteConfig takes a yaml filename as input and

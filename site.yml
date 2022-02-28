@@ -2,6 +2,35 @@
 ---
 - name: basic
   divBoxes:
+      - name: main
+        border:     true
+        borderW:    1
+        borderChar: "*"
+        fillChar:   " "
+        borderSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+        startX:     0
+        startY:     0
+        width:      175
+        height:     60
+        fillSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+  elements:
+    - textBlobs:
+        - content: "welcome to the basic site"
+          wrap: true
+          style:
+              fg: "gray"
+              bg: "black"
+              attr: 4
+          divNames:
+            - "main"
+- name: fancy
+  divBoxes:
       - name: bg
         border:     true
         borderW:    1
@@ -126,3 +155,4 @@
               attr: 4
           divNames:
             - "sidebar"
+...

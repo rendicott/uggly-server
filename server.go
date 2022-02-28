@@ -10,6 +10,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"errors"
 )
 
 var (
@@ -18,36 +19,91 @@ var (
 	keyFile    = flag.String("key_file", "", "The TLS key file")
 	jsonDBFile = flag.String("json_db_file", "", "A json file containing a list of features")
 	port       = flag.Int("port", 10000, "The server port")
-	siteConfig = flag.String("sites", "site.yml", "yaml file containing site definitions")
+	siteConfigFile = flag.String("sites", "site.yml", "yaml file containing site definitions")
 )
 
-type feedServer struct {
-	pb.UnimplementedFeedServer
+/* siteServerSite holds elements required by the protobuf definition for a site which
+includes its elemntal properties
+*/
+type siteServerSite struct {
+	name string
 	divBoxes *pb.DivBoxes
 	elements *pb.Elements
+	response *pb.SiteResponse
+}
+/* siteServer is a struct from which to attach the required methods for the Site Service
+as defined in the protobuf definition
+*/
+type siteServer struct {
+	pb.UnimplementedSiteServer
+	sites []*siteServerSite
 }
 
-func (s feedServer) GetFeed(ctx context.Context, freq *pb.FeedRequest) (fresp *pb.FeedResponse, err error) {
+/* feedServer is a struct from which to attach the required methods for the Feed Service
+as defined in the protobuf definition
+*/
+type feedServer struct {
+	pb.UnimplementedFeedServer
+	sites []*pb.SiteListing
+}
+
+/* GetFeed implements the Feed Service's GetFeed method as required in the protobuf definition.
+
+It is the primary listening method for the server. It accepts a FeedRequest and then attempts to build
+a FeedResponse which the client will process. 
+*/
+func (f feedServer) GetFeed(ctx context.Context, freq *pb.FeedRequest) (fresp *pb.FeedResponse, err error) {
 	fresp = &pb.FeedResponse{}
-	fresp.DivBoxes = &pb.DivBoxes{}
-	fresp.Elements = &pb.Elements{}
-	log.Printf("attaching feedserver divboxes of len %d to "+
-		"resp.DivBoxes with mem address %v",
-		len(s.divBoxes.Boxes), &fresp.DivBoxes)
-	fresp.DivBoxes = s.divBoxes
-	log.Printf("attaching feedserver elements of len %d to "+
-		"resp.Elements with mem address %v",
-		len(s.elements.TextBlobs), &fresp.Elements)
-	fresp.Elements = s.elements
+	fresp.Sites = f.sites
 	return fresp, err
 }
 
-func newServer(sc *siteconfig.Sites) *feedServer {
+/* GetSite implements the Site Service's GetSite method as required in the protobuf definition.
+
+It is the primary listening method for the server. It accepts a SiteRequest and then attempts to build
+a SiteResponse which the client will process and display on the client's screen. 
+*/
+func (s siteServer) GetSite(ctx context.Context, sreq *pb.SiteRequest) (sresp *pb.SiteResponse, err error) {
+	found := false
+	for _, site := range(s.sites) {
+		if site.name == sreq.Name {
+			found = true
+			return site.response, err
+		}
+	}
+	if !found {
+		err = errors.New("requested site not found")
+	}
+	return sresp, err
+}
+
+/* newFeedServer takes the loaded siteconfig YAML and converts it to the structs
+required so that the GetFeed method can adequately respond with a FeedResponse which
+is primarily a list of the sites this server serves.
+*/
+func newFeedServer(sc *siteconfig.Sites) *feedServer {
 	fServer := &feedServer{}
-	fServer.divBoxes = &pb.DivBoxes{}
-	log.Printf("convering config to uggly pb's for %d sites\n", len(sc.Sites))
 	for _, site := range sc.Sites {
-		for _, sbox := range site.DivBoxes {
+		sListing := &pb.SiteListing{}
+		sListing.Name = site.Name
+		fmt.Printf("Have site name: %s\n", site.Name)
+		// ./server.go:82:17: first argument to append must be slice; have *uggly.Sites
+		fServer.sites = append(fServer.sites, sListing)
+	}
+	return fServer
+}
+
+
+/* newSiteServer takes the loaded siteconfig YAML and converts it to the structs
+required so that the GetSite method can adequately respond with a SiteResponse.
+*/
+func newSiteServer(sc *siteconfig.Sites) *siteServer {
+	sServer := &siteServer{}
+	for i := range(sc.Sites) {
+		ssite := siteServerSite{}
+		ssite.name = sc.Sites[i].Name
+		ssite.divBoxes = &pb.DivBoxes{}
+		for _, sbox := range sc.Sites[i].DivBoxes {
 			ubox := pb.DivBox{
 				Name:       sbox.Name,
 				Border:     sbox.Border,
@@ -73,11 +129,11 @@ func newServer(sc *siteconfig.Sites) *feedServer {
 					Attr: sbox.FillSt.Attr,
 				}
 			}
-			fServer.divBoxes.Boxes = append(fServer.divBoxes.Boxes, &ubox)
+			ssite.divBoxes.Boxes = append(ssite.divBoxes.Boxes, &ubox)
 		}
-		log.Printf("have divboxes of len %d\n", len(fServer.divBoxes.Boxes))
-		fServer.elements = &pb.Elements{}
-		for _, sele := range site.Elements {
+		log.Printf("have divboxes of len %d\n", len(ssite.divBoxes.Boxes))
+		ssite.elements = &pb.Elements{}
+		for _, sele := range sc.Sites[i].Elements {
 			for _, sblob := range sele.TextBlobs {
 				ublob := pb.TextBlob{
 					Content:  sblob.Content,
@@ -90,13 +146,20 @@ func newServer(sc *siteconfig.Sites) *feedServer {
 						Bg: sblob.Style.Bg,
 					}
 				}
-				fServer.elements.TextBlobs = append(
-					fServer.elements.TextBlobs, &ublob)
+				ssite.elements.TextBlobs = append(
+					ssite.elements.TextBlobs, &ublob)
 			}
 		}
+		log.Printf("have textblobs of len %d\n", len(ssite.elements.TextBlobs))
+		// now pre-build the response
+		ssite.response = &pb.SiteResponse{}
+		ssite.response.DivBoxes = &pb.DivBoxes{}
+		ssite.response.Elements = &pb.Elements{}
+		ssite.response.DivBoxes = ssite.divBoxes
+		ssite.response.Elements = ssite.elements
+		sServer.sites = append(sServer.sites, &ssite)
 	}
-	log.Printf("have textblobs of len %d\n", len(fServer.elements.TextBlobs))
-	return fServer
+	return sServer
 }
 
 func main() {
@@ -106,15 +169,17 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	// parse site config
-	sites, err := siteconfig.NewSiteConfig(*siteConfig)
+	scSites, err := siteconfig.NewSiteConfig(*siteConfigFile)
 	if err != nil {
 		log.Printf("error parsing site config file: '%s'\n", err.Error())
 		os.Exit(1)
 	}
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
-	s := newServer(sites)
-	pb.RegisterFeedServer(grpcServer, *s)
+	f := newFeedServer(scSites)
+	pb.RegisterFeedServer(grpcServer, *f)
+	s := newSiteServer(scSites)
+	pb.RegisterSiteServer(grpcServer, *s)
 	grpcServer.Serve(lis)
 	log.Println("Server listening")
 }
