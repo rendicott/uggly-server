@@ -1,4 +1,4 @@
-package siteconfig
+package pageconfig
 
 import (
 	"errors"
@@ -12,9 +12,9 @@ type style struct {
 	Attr string
 }
 
-// Site contains all of the fields that can be parsed
-// from the siteconfig YAML for each site
-type Site struct {
+// Page contains all of the fields that can be parsed
+// from the pageconfig YAML for each page
+type Page struct {
 	Name     string `yaml:"name"`
 	DivBoxes []*struct {
 		Name             string `yaml:"name"`
@@ -40,38 +40,38 @@ type Site struct {
 	} `yaml:"elements"`
 }
 
-// Sites contains configuration for the various
-// uggly sites that the server should run
-type Sites struct {
-	Sites []*Site
+// Pages contains configuration for the various
+// uggly pages that the server should run
+type Pages struct {
+	Pages []*Page
 }
 
-// NewSiteConfig takes a yaml filename as input and
+// NewPageConfig takes a yaml filename as input and
 // attempts to parse it int32o a config object.
-func NewSiteConfig(filename string) (*Sites, error) {
+func NewPageConfig(filename string) (*Pages, error) {
 	var err error
-	sc := Sites{}
+	pc := Pages{}
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return &sc, err
+		return &pc, err
 	}
-	err = yaml.Unmarshal(yamlFile, &sc.Sites)
+	err = yaml.Unmarshal(yamlFile, &pc.Pages)
 	if err != nil {
-		return &sc, err
+		return &pc, err
 	}
-	if len(sc.Sites) < 1 {
-		err = errors.New("no sites parsed from config")
+	if len(pc.Pages) < 1 {
+		err = errors.New("no pages parsed from config")
 	}
 	// validate some of the input
-	for _, site := range sc.Sites {
-		for _, divbox := range site.DivBoxes {
+	for _, page := range pc.Pages {
+		for _, divbox := range page.DivBoxes {
 			bcr := []rune(divbox.BorderCharString)
 			fcr := []rune(divbox.FillCharString)
 			if len(fcr) > 1 || len(bcr) > 1 {
 				err = errors.New(
 					"borderChar and fillChar must be string of" +
 						" length 1 so it can be parsed to rune")
-				return &sc, err
+				return &pc, err
 			}
 			if len(bcr) > 0 {
 				divbox.BorderChar = bcr[0]
@@ -79,5 +79,5 @@ func NewSiteConfig(filename string) (*Sites, error) {
 			divbox.FillChar = fcr[0]
 		}
 	}
-	return &sc, err
+	return &pc, err
 }

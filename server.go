@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	pb "github.com/rendicott/uggly"
-	"github.com/rendicott/uggly-server/siteconfig"
+	"github.com/rendicott/uggly-server/pageconfig"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -19,24 +19,24 @@ var (
 	keyFile    = flag.String("key_file", "", "The TLS key file")
 	jsonDBFile = flag.String("json_db_file", "", "A json file containing a list of features")
 	port       = flag.Int("port", 10000, "The server port")
-	siteConfigFile = flag.String("sites", "site.yml", "yaml file containing site definitions")
+	pageConfigFile = flag.String("pages", "pages.yml", "yaml file containing page definitions")
 )
 
-/* siteServerSite holds elements required by the protobuf definition for a site which
+/* pageServerPage holds elements required by the protobuf definition for a page which
 includes its elemntal properties
 */
-type siteServerSite struct {
+type pageServerPage struct {
 	name string
 	divBoxes *pb.DivBoxes
 	elements *pb.Elements
-	response *pb.SiteResponse
+	response *pb.PageResponse
 }
-/* siteServer is a struct from which to attach the required methods for the Site Service
+/* pageServer is a struct from which to attach the required methods for the Page Service
 as defined in the protobuf definition
 */
-type siteServer struct {
-	pb.UnimplementedSiteServer
-	sites []*siteServerSite
+type pageServer struct {
+	pb.UnimplementedPageServer
+	pages []*pageServerPage
 }
 
 /* feedServer is a struct from which to attach the required methods for the Feed Service
@@ -44,7 +44,7 @@ as defined in the protobuf definition
 */
 type feedServer struct {
 	pb.UnimplementedFeedServer
-	sites []*pb.SiteListing
+	pages []*pb.PageListing
 }
 
 /* GetFeed implements the Feed Service's GetFeed method as required in the protobuf definition.
@@ -54,112 +54,113 @@ a FeedResponse which the client will process.
 */
 func (f feedServer) GetFeed(ctx context.Context, freq *pb.FeedRequest) (fresp *pb.FeedResponse, err error) {
 	fresp = &pb.FeedResponse{}
-	fresp.Sites = f.sites
+	fresp.Pages = f.pages
 	return fresp, err
 }
 
-/* GetSite implements the Site Service's GetSite method as required in the protobuf definition.
+/* GetPage implements the Page Service's GetPage method as required in the protobuf definition.
 
-It is the primary listening method for the server. It accepts a SiteRequest and then attempts to build
-a SiteResponse which the client will process and display on the client's screen. 
+It is the primary listening method for the server. It accepts a PageRequest and then attempts to build
+a PageResponse which the client will process and display on the client's pcreen. 
 */
-func (s siteServer) GetSite(ctx context.Context, sreq *pb.SiteRequest) (sresp *pb.SiteResponse, err error) {
+func (s pageServer) GetPage(ctx context.Context, preq *pb.PageRequest) (presp *pb.PageResponse, err error) {
 	found := false
-	for _, site := range(s.sites) {
-		if site.name == sreq.Name {
+	for _, page := range(s.pages) {
+		if page.name == preq.Name {
 			found = true
-			return site.response, err
+			page.response.Name = page.name
+			return page.response, err
 		}
 	}
 	if !found {
-		err = errors.New("requested site not found")
+		err = errors.New("requested page not found")
 	}
-	return sresp, err
+	return presp, err
 }
 
-/* newFeedServer takes the loaded siteconfig YAML and converts it to the structs
+/* newFeedServer takes the loaded pageconfig YAML and converts it to the structs
 required so that the GetFeed method can adequately respond with a FeedResponse which
-is primarily a list of the sites this server serves.
+is primarily a list of the pages this server serves.
 */
-func newFeedServer(sc *siteconfig.Sites) *feedServer {
+func newFeedServer(pc *pageconfig.Pages) *feedServer {
 	fServer := &feedServer{}
-	for _, site := range sc.Sites {
-		sListing := &pb.SiteListing{}
-		sListing.Name = site.Name
-		fmt.Printf("Have site name: %s\n", site.Name)
-		// ./server.go:82:17: first argument to append must be slice; have *uggly.Sites
-		fServer.sites = append(fServer.sites, sListing)
+	for _, page := range pc.Pages {
+		sListing := &pb.PageListing{}
+		sListing.Name = page.Name
+		fmt.Printf("Have page name: %s\n", page.Name)
+		// ./server.go:82:17: first argument to append must be slice; have *uggly.Pages
+		fServer.pages = append(fServer.pages, sListing)
 	}
 	return fServer
 }
 
 
-/* newSiteServer takes the loaded siteconfig YAML and converts it to the structs
-required so that the GetSite method can adequately respond with a SiteResponse.
+/* newPageServer takes the loaded pageconfig YAML and converts it to the structs
+required so that the GetPage method can adequately respond with a PageResponse.
 */
-func newSiteServer(sc *siteconfig.Sites) *siteServer {
-	sServer := &siteServer{}
-	for i := range(sc.Sites) {
-		ssite := siteServerSite{}
-		ssite.name = sc.Sites[i].Name
-		ssite.divBoxes = &pb.DivBoxes{}
-		for _, sbox := range sc.Sites[i].DivBoxes {
+func newPageServer(pc *pageconfig.Pages) *pageServer {
+	pServer := &pageServer{}
+	for i := range(pc.Pages) {
+		psp := pageServerPage{}
+		psp.name = pc.Pages[i].Name
+		psp.divBoxes = &pb.DivBoxes{}
+		for _, pbox := range pc.Pages[i].DivBoxes {
 			ubox := pb.DivBox{
-				Name:       sbox.Name,
-				Border:     sbox.Border,
-				BorderW:    sbox.BorderW,
-				BorderChar: sbox.BorderChar,
-				FillChar:   sbox.FillChar,
-				StartX:     sbox.StartX,
-				StartY:     sbox.StartY,
-				Width:      sbox.Width,
-				Height:     sbox.Height,
+				Name:       pbox.Name,
+				Border:     pbox.Border,
+				BorderW:    pbox.BorderW,
+				BorderChar: pbox.BorderChar,
+				FillChar:   pbox.FillChar,
+				StartX:     pbox.StartX,
+				StartY:     pbox.StartY,
+				Width:      pbox.Width,
+				Height:     pbox.Height,
 			}
-			if sbox.BorderSt != nil {
+			if pbox.BorderSt != nil {
 				ubox.BorderSt = &pb.Style{
-					Fg:   sbox.BorderSt.Fg,
-					Bg:   sbox.BorderSt.Bg,
-					Attr: sbox.BorderSt.Attr,
+					Fg:   pbox.BorderSt.Fg,
+					Bg:   pbox.BorderSt.Bg,
+					Attr: pbox.BorderSt.Attr,
 				}
 			}
-			if sbox.FillSt != nil {
+			if pbox.FillSt != nil {
 				ubox.FillSt = &pb.Style{
-					Fg:   sbox.FillSt.Fg,
-					Bg:   sbox.FillSt.Bg,
-					Attr: sbox.FillSt.Attr,
+					Fg:   pbox.FillSt.Fg,
+					Bg:   pbox.FillSt.Bg,
+					Attr: pbox.FillSt.Attr,
 				}
 			}
-			ssite.divBoxes.Boxes = append(ssite.divBoxes.Boxes, &ubox)
+			psp.divBoxes.Boxes = append(psp.divBoxes.Boxes, &ubox)
 		}
-		log.Printf("have divboxes of len %d\n", len(ssite.divBoxes.Boxes))
-		ssite.elements = &pb.Elements{}
-		for _, sele := range sc.Sites[i].Elements {
-			for _, sblob := range sele.TextBlobs {
+		log.Printf("have divboxes of len %d\n", len(psp.divBoxes.Boxes))
+		psp.elements = &pb.Elements{}
+		for _, sele := range pc.Pages[i].Elements {
+			for _, pblob := range sele.TextBlobs {
 				ublob := pb.TextBlob{
-					Content:  sblob.Content,
-					Wrap:     sblob.Wrap,
-					DivNames: sblob.DivNames,
+					Content:  pblob.Content,
+					Wrap:     pblob.Wrap,
+					DivNames: pblob.DivNames,
 				}
-				if sblob.Style != nil {
+				if pblob.Style != nil {
 					ublob.Style = &pb.Style{
-						Fg: sblob.Style.Fg,
-						Bg: sblob.Style.Bg,
+						Fg: pblob.Style.Fg,
+						Bg: pblob.Style.Bg,
 					}
 				}
-				ssite.elements.TextBlobs = append(
-					ssite.elements.TextBlobs, &ublob)
+				psp.elements.TextBlobs = append(
+					psp.elements.TextBlobs, &ublob)
 			}
 		}
-		log.Printf("have textblobs of len %d\n", len(ssite.elements.TextBlobs))
+		log.Printf("have textblobs of len %d\n", len(psp.elements.TextBlobs))
 		// now pre-build the response
-		ssite.response = &pb.SiteResponse{}
-		ssite.response.DivBoxes = &pb.DivBoxes{}
-		ssite.response.Elements = &pb.Elements{}
-		ssite.response.DivBoxes = ssite.divBoxes
-		ssite.response.Elements = ssite.elements
-		sServer.sites = append(sServer.sites, &ssite)
+		psp.response = &pb.PageResponse{}
+		psp.response.DivBoxes = &pb.DivBoxes{}
+		psp.response.Elements = &pb.Elements{}
+		psp.response.DivBoxes = psp.divBoxes
+		psp.response.Elements = psp.elements
+		pServer.pages = append(pServer.pages, &psp)
 	}
-	return sServer
+	return pServer
 }
 
 func main() {
@@ -168,18 +169,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	// parse site config
-	scSites, err := siteconfig.NewSiteConfig(*siteConfigFile)
+	// parse page config
+	pcPages, err := pageconfig.NewPageConfig(*pageConfigFile)
 	if err != nil {
-		log.Printf("error parsing site config file: '%s'\n", err.Error())
+		log.Printf("error parsing page config file: '%s'\n", err.Error())
 		os.Exit(1)
 	}
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
-	f := newFeedServer(scSites)
+	f := newFeedServer(pcPages)
 	pb.RegisterFeedServer(grpcServer, *f)
-	s := newSiteServer(scSites)
-	pb.RegisterSiteServer(grpcServer, *s)
+	s := newPageServer(pcPages)
+	pb.RegisterPageServer(grpcServer, *s)
 	grpcServer.Serve(lis)
 	log.Println("Server listening")
 }
