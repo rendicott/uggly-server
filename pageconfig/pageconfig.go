@@ -16,6 +16,12 @@ type style struct {
 // from the pageconfig YAML for each page
 type Page struct {
 	Name     string `yaml:"name"`
+	Links   []*struct {
+		KeyStroke  string `yaml:"keyStroke"`
+		PageName   string `yaml:"pageName"`
+		Server     string `yaml:"server"`
+		Port       string `yaml:"port"`
+	} `yaml:"links"`
 	DivBoxes []*struct {
 		Name             string `yaml:"name"`
 		Border           bool   `yaml:"border"`

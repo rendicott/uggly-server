@@ -29,7 +29,16 @@
               attr: 4
           divNames:
             - "main"
-- name: fancy
+- name: fancy-home
+  links:
+    - keyStroke: "h"
+      pageName: "fancy-home"
+    - keyStroke: "n"
+      pageName: "fancy-news"
+    - keyStroke: "a"
+      pageName: "fancy-about"
+    - keyStroke: "c"
+      pageName: "fancy-contact"
   divBoxes:
       - name: bg
         border:     true
@@ -96,6 +105,23 @@
   elements:
     - textBlobs:
         - content: |
+            Table of Contents
+
+            Home (h)
+
+            News (n)
+
+            About (a)
+
+            Contact (c)
+          wrap: true
+          style:
+              fg: "black"
+              bg: "gray"
+              attr: 4
+          divNames:
+            - "sidebar"
+        - content: |
             __        __   _                            _          _   _                _ _       
             \ \      / /__| | ___ ___  _ __ ___   ___  | |_ ___   | |_| |__   ___   ___(_) |_ ___ 
              \ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | __/ _ \  | __| '_ \ / _ \ / __| | __/ _ \
@@ -137,17 +163,91 @@
               attr: 4
           divNames:
             - "main"
+- name: fancy-about
+  links:
+    - keyStroke: "h"
+      pageName: "fancy-home"
+    - keyStroke: "n"
+      pageName: "fancy-news"
+    - keyStroke: "a"
+      pageName: "fancy-about"
+    - keyStroke: "c"
+      pageName: "fancy-contact"
+  divBoxes:
+      - name: bg
+        border:     true
+        borderW:    1
+        borderChar: "*"
+        fillChar:   " "
+        borderSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+        startX:     0
+        startY:     0
+        width:      175
+        height:     60
+        fillSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+      - name:       "header"
+        border:     true
+        borderW:    1
+        borderChar: "-"
+        fillChar:   " "
+        borderSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+        startX:     1
+        startY:     1
+        width:      172
+        height:     8
+        fillSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+      - name:       "sidebar"
+        border:     true
+        borderW:    1
+        borderChar: "("
+        borderSt:
+            fg: "red"
+            bg: "black"
+            attr: 4
+        fillChar:   " "
+        startX:     1
+        startY:     10
+        width:      22
+        height:     55
+        fillSt:
+          fg: "black"
+          bg: "gray"
+          attr: 4
+      - name:       "main"
+        border:     false
+        fillChar:   " "
+        startX:     24
+        startY:     10
+        width:      100
+        height:     55
+        fillSt:
+          fg: "black"
+          bg: "lightgray"
+          attr: 4
+  elements:
+    - textBlobs:
         - content: |
             Table of Contents
-            (links not supported yet)
 
-            Home
+            Home (h)
 
-            News
+            News (n)
 
-            About
+            About (a)
 
-            Contact
+            Contact (c)
           wrap: true
           style:
               fg: "black"
@@ -155,4 +255,257 @@
               attr: 4
           divNames:
             - "sidebar"
+        - content: |
+            __        __   _                            _          _   _                _ _       
+            \ \      / /__| | ___ ___  _ __ ___   ___  | |_ ___   | |_| |__   ___   ___(_) |_ ___ 
+             \ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | __/ _ \  | __| '_ \ / _ \ / __| | __/ _ \
+              \ V  V /  __/ | (_| (_) | | | | | |  __/ | || (_) | | |_| | | |  __/ \__ \ | ||  __/
+               \_/\_/ \___|_|\___\___/|_| |_| |_|\___|  \__\___/   \__|_| |_|\___| |___/_|\__\___|
+          wrap: true
+          style:
+              fg: "gray"
+              bg: "black"
+              attr: 4
+          divNames:
+            - "header"
+        - content: |
+            This page is all about the project.
+
+          wrap: true
+          style:
+              fg: "black"
+              bg: "lightgrey"
+              attr: 4
+          divNames:
+            - "main"
+- name: fancy-contact
+  links:
+    - keyStroke: "h"
+      pageName: "fancy-home"
+    - keyStroke: "n"
+      pageName: "fancy-news"
+    - keyStroke: "a"
+      pageName: "fancy-about"
+    - keyStroke: "c"
+      pageName: "fancy-contact"
+  divBoxes:
+      - name: bg
+        border:     true
+        borderW:    1
+        borderChar: "*"
+        fillChar:   " "
+        borderSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+        startX:     0
+        startY:     0
+        width:      175
+        height:     60
+        fillSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+      - name:       "header"
+        border:     true
+        borderW:    1
+        borderChar: "-"
+        fillChar:   " "
+        borderSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+        startX:     1
+        startY:     1
+        width:      172
+        height:     8
+        fillSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+      - name:       "sidebar"
+        border:     true
+        borderW:    1
+        borderChar: "("
+        borderSt:
+            fg: "red"
+            bg: "black"
+            attr: 4
+        fillChar:   " "
+        startX:     1
+        startY:     10
+        width:      22
+        height:     55
+        fillSt:
+          fg: "black"
+          bg: "gray"
+          attr: 4
+      - name:       "main"
+        border:     false
+        fillChar:   " "
+        startX:     24
+        startY:     10
+        width:      100
+        height:     55
+        fillSt:
+          fg: "black"
+          bg: "lightgray"
+          attr: 4
+  elements:
+    - textBlobs:
+        - content: |
+            Table of Contents
+
+            Home (h)
+
+            News (n)
+
+            About (a)
+
+            Contact (c)
+          wrap: true
+          style:
+              fg: "black"
+              bg: "gray"
+              attr: 4
+          divNames:
+            - "sidebar"
+        - content: |
+            __        __   _                            _          _   _                _ _       
+            \ \      / /__| | ___ ___  _ __ ___   ___  | |_ ___   | |_| |__   ___   ___(_) |_ ___ 
+             \ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | __/ _ \  | __| '_ \ / _ \ / __| | __/ _ \
+              \ V  V /  __/ | (_| (_) | | | | | |  __/ | || (_) | | |_| | | |  __/ \__ \ | ||  __/
+               \_/\_/ \___|_|\___\___/|_| |_| |_|\___|  \__\___/   \__|_| |_|\___| |___/_|\__\___|
+          wrap: true
+          style:
+              fg: "gray"
+              bg: "black"
+              attr: 4
+          divNames:
+            - "header"
+        - content: |
+            Contact info.
+
+          wrap: true
+          style:
+              fg: "black"
+              bg: "lightgrey"
+              attr: 4
+          divNames:
+            - "main"
+- name: fancy-news
+  links:
+    - keyStroke: "h"
+      pageName: "fancy-home"
+    - keyStroke: "n"
+      pageName: "fancy-news"
+    - keyStroke: "a"
+      pageName: "fancy-about"
+    - keyStroke: "c"
+      pageName: "fancy-contact"
+  divBoxes:
+      - name: bg
+        border:     true
+        borderW:    1
+        borderChar: "*"
+        fillChar:   " "
+        borderSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+        startX:     0
+        startY:     0
+        width:      175
+        height:     60
+        fillSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+      - name:       "header"
+        border:     true
+        borderW:    1
+        borderChar: "-"
+        fillChar:   " "
+        borderSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+        startX:     1
+        startY:     1
+        width:      172
+        height:     8
+        fillSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+      - name:       "sidebar"
+        border:     true
+        borderW:    1
+        borderChar: "("
+        borderSt:
+            fg: "red"
+            bg: "black"
+            attr: 4
+        fillChar:   " "
+        startX:     1
+        startY:     10
+        width:      22
+        height:     55
+        fillSt:
+          fg: "black"
+          bg: "gray"
+          attr: 4
+      - name:       "main"
+        border:     false
+        fillChar:   " "
+        startX:     24
+        startY:     10
+        width:      100
+        height:     55
+        fillSt:
+          fg: "black"
+          bg: "lightgray"
+          attr: 4
+  elements:
+    - textBlobs:
+        - content: |
+            Table of Contents
+
+            Home (h)
+
+            News (n)
+
+            About (a)
+
+            Contact (c)
+          wrap: true
+          style:
+              fg: "black"
+              bg: "gray"
+              attr: 4
+          divNames:
+            - "sidebar"
+        - content: |
+            __        __   _                            _          _   _                _ _       
+            \ \      / /__| | ___ ___  _ __ ___   ___  | |_ ___   | |_| |__   ___   ___(_) |_ ___ 
+             \ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | __/ _ \  | __| '_ \ / _ \ / __| | __/ _ \
+              \ V  V /  __/ | (_| (_) | | | | | |  __/ | || (_) | | |_| | | |  __/ \__ \ | ||  __/
+               \_/\_/ \___|_|\___\___/|_| |_| |_|\___|  \__\___/   \__|_| |_|\___| |___/_|\__\___|
+          wrap: true
+          style:
+              fg: "gray"
+              bg: "black"
+              attr: 4
+          divNames:
+            - "header"
+        - content: |
+            News
+
+          wrap: true
+          style:
+              fg: "black"
+              bg: "lightgrey"
+              attr: 4
+          divNames:
+            - "main"
 ...

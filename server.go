@@ -27,6 +27,7 @@ includes its elemntal properties
 */
 type pageServerPage struct {
 	name string
+	links    []*pb.Link
 	divBoxes *pb.DivBoxes
 	elements *pb.Elements
 	response *pb.PageResponse
@@ -104,6 +105,16 @@ func newPageServer(pc *pageconfig.Pages) *pageServer {
 		psp := pageServerPage{}
 		psp.name = pc.Pages[i].Name
 		psp.divBoxes = &pb.DivBoxes{}
+		psp.links = make([]*pb.Link, 0)
+		for _, plink := range pc.Pages[i].Links{
+			ulink := pb.Link{
+				KeyStroke: plink.KeyStroke,
+				PageName: plink.PageName,
+				Server: plink.Server,
+				Port: plink.Port,
+			}
+			psp.links = append(psp.links, &ulink)
+		}
 		for _, pbox := range pc.Pages[i].DivBoxes {
 			ubox := pb.DivBox{
 				Name:       pbox.Name,
@@ -156,8 +167,10 @@ func newPageServer(pc *pageconfig.Pages) *pageServer {
 		psp.response = &pb.PageResponse{}
 		psp.response.DivBoxes = &pb.DivBoxes{}
 		psp.response.Elements = &pb.Elements{}
+		psp.response.Links    = make([]*pb.Link, 0)
 		psp.response.DivBoxes = psp.divBoxes
 		psp.response.Elements = psp.elements
+		psp.response.Links = psp.links
 		pServer.pages = append(pServer.pages, &psp)
 	}
 	return pServer
