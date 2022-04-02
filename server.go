@@ -18,6 +18,7 @@ var (
 	//	certFile       = flag.String("cert_file", "", "The TLS cert file")
 	//	keyFile        = flag.String("key_file", "", "The TLS key file")
 	//	jsonDBFile     = flag.String("json_db_file", "", "A json file containing a list of features")
+	address        = flag.String("address", "localhost", "the interface address to listen on. Setting to '0.0.0.0' will listen on all interfaces but some OS's might be touchy about this")
 	port           = flag.Int("port", 10000, "The server port")
 	pageConfigFile = flag.String("pages", "pages.yml", "yaml file containing page definitions")
 )
@@ -178,7 +179,7 @@ func newPageServer(pc *pageconfig.Pages) *pageServer {
 
 func main() {
 	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", *port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *address, *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

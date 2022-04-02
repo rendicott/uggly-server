@@ -1,0 +1,31 @@
+# color names can be found here: https://github.com/gdamore/tcell/blob/master/color.go
+---
+- name: home
+  divBoxes:
+      - name: main
+        border:     true
+        borderW:    1
+        borderChar: "-"
+        fillChar:   " "
+        borderSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+        startX:     0
+        startY:     0
+        width:      20
+        height:     8
+        fillSt:
+          fg: "gray"
+          bg: "black"
+          attr: 4
+  elements:
+    - textBlobs:
+        - content: "This content won't fit in the DivBox so it will try to wrap"
+          wrap: true
+          style:
+              fg: "gray"
+              bg: "black"
+              attr: 4
+          divNames:
+            - "main"

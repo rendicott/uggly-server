@@ -19,4 +19,4 @@ Similar to Apache, this server takes a file parameter for a YML file that contai
 7. Navigate the site using the keyboard (e.g., press `a` to go to the about page.)
 
 # Creating Content
-
+Check out `hello-world.yml` and `wrap.yml` for some more basic examples. 
