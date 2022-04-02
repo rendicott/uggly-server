@@ -1,4 +1,4 @@
-version := 0.0.3
+version := 0.0.4
 projectName := ugglys
 packageNameNix := $(projectName)-linux-amd64-$(version).tar.gz
 packageNameMac := $(projectName)-darwin-amd64-$(version).tar.gz

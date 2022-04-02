@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	pb "github.com/rendicott/uggly"
@@ -10,15 +11,14 @@ import (
 	"log"
 	"net"
 	"os"
-	"errors"
 )
 
 var (
-	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	certFile   = flag.String("cert_file", "", "The TLS cert file")
-	keyFile    = flag.String("key_file", "", "The TLS key file")
-	jsonDBFile = flag.String("json_db_file", "", "A json file containing a list of features")
-	port       = flag.Int("port", 10000, "The server port")
+	//	tls            = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	//	certFile       = flag.String("cert_file", "", "The TLS cert file")
+	//	keyFile        = flag.String("key_file", "", "The TLS key file")
+	//	jsonDBFile     = flag.String("json_db_file", "", "A json file containing a list of features")
+	port           = flag.Int("port", 10000, "The server port")
 	pageConfigFile = flag.String("pages", "pages.yml", "yaml file containing page definitions")
 )
 
@@ -26,12 +26,13 @@ var (
 includes its elemntal properties
 */
 type pageServerPage struct {
-	name string
+	name     string
 	links    []*pb.Link
 	divBoxes *pb.DivBoxes
 	elements *pb.Elements
 	response *pb.PageResponse
 }
+
 /* pageServer is a struct from which to attach the required methods for the Page Service
 as defined in the protobuf definition
 */
@@ -51,7 +52,7 @@ type feedServer struct {
 /* GetFeed implements the Feed Service's GetFeed method as required in the protobuf definition.
 
 It is the primary listening method for the server. It accepts a FeedRequest and then attempts to build
-a FeedResponse which the client will process. 
+a FeedResponse which the client will process.
 */
 func (f feedServer) GetFeed(ctx context.Context, freq *pb.FeedRequest) (fresp *pb.FeedResponse, err error) {
 	fresp = &pb.FeedResponse{}
@@ -62,11 +63,11 @@ func (f feedServer) GetFeed(ctx context.Context, freq *pb.FeedRequest) (fresp *p
 /* GetPage implements the Page Service's GetPage method as required in the protobuf definition.
 
 It is the primary listening method for the server. It accepts a PageRequest and then attempts to build
-a PageResponse which the client will process and display on the client's pcreen. 
+a PageResponse which the client will process and display on the client's pcreen.
 */
 func (s pageServer) GetPage(ctx context.Context, preq *pb.PageRequest) (presp *pb.PageResponse, err error) {
 	found := false
-	for _, page := range(s.pages) {
+	for _, page := range s.pages {
 		if page.name == preq.Name {
 			found = true
 			page.response.Name = page.name
@@ -95,23 +96,22 @@ func newFeedServer(pc *pageconfig.Pages) *feedServer {
 	return fServer
 }
 
-
 /* newPageServer takes the loaded pageconfig YAML and converts it to the structs
 required so that the GetPage method can adequately respond with a PageResponse.
 */
 func newPageServer(pc *pageconfig.Pages) *pageServer {
 	pServer := &pageServer{}
-	for i := range(pc.Pages) {
+	for i := range pc.Pages {
 		psp := pageServerPage{}
 		psp.name = pc.Pages[i].Name
 		psp.divBoxes = &pb.DivBoxes{}
 		psp.links = make([]*pb.Link, 0)
-		for _, plink := range pc.Pages[i].Links{
+		for _, plink := range pc.Pages[i].Links {
 			ulink := pb.Link{
 				KeyStroke: plink.KeyStroke,
-				PageName: plink.PageName,
-				Server: plink.Server,
-				Port: plink.Port,
+				PageName:  plink.PageName,
+				Server:    plink.Server,
+				Port:      plink.Port,
 			}
 			psp.links = append(psp.links, &ulink)
 		}
@@ -167,7 +167,7 @@ func newPageServer(pc *pageconfig.Pages) *pageServer {
 		psp.response = &pb.PageResponse{}
 		psp.response.DivBoxes = &pb.DivBoxes{}
 		psp.response.Elements = &pb.Elements{}
-		psp.response.Links    = make([]*pb.Link, 0)
+		psp.response.Links = make([]*pb.Link, 0)
 		psp.response.DivBoxes = psp.divBoxes
 		psp.response.Elements = psp.elements
 		psp.response.Links = psp.links
