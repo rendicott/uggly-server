@@ -19,4 +19,8 @@ Similar to Apache, this server takes a file parameter for a YML file that contai
 7. Navigate the site using the keyboard (e.g., press `a` to go to the about page.)
 
 # Creating Content
-Check out `hello-world.yml` and `wrap.yml` for some more basic examples. 
+Check out `hello-world.yml` and `wrap.yml` for some more basic examples. Modifying the file that the server started with will trigger a re-serve of the content. You'll have to hit refresh (F5) on the client.
+
+The server tries to parse the file into structs that map very closely to the uggly protocol structs but it doesn't support all of them. For, example, Forms would be tricky in a static file because there would be no way to define a handler for the submission.
+
+However, you should be able to play around with DivBox, TextBlob, and Links to get a feel for the capabilities of the visualizations.  

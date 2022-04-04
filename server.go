@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"time"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	pb "github.com/rendicott/uggly"
 	"github.com/rendicott/uggly-server/pageconfig"
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	"os"
 )
 
 var (
@@ -177,24 +178,77 @@ func newPageServer(pc *pageconfig.Pages) *pageServer {
 	return pServer
 }
 
-func main() {
-	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *address, *port))
+func fileWatcher(watcher *fsnotify.Watcher, addr string, port int, done chan struct{}) {
+	for {
+		log.Println("watching for file events")
+		time.Sleep(50*time.Millisecond)
+		select {
+		// watch for events
+		case event := <-watcher.Events:
+			if event.Op.String() == "CHMOD" {
+				time.Sleep(1*time.Second)
+				if server != nil {
+					log.Println("detected file change, stopping server")
+					server.GracefulStop()
+					go loadAndServe(addr, port, event.Name)
+				}
+				// start watching the file again since I guess
+				// you only get one event then in deregisters. Dumb.	
+				watcher.Add(event.Name)
+			}
+		case err := <-watcher.Errors:
+			log.Fatalf("ERROR: %v", err)
+			return
+		}
+	}
+	log.Println("fileWatcher exiting")
+}
+
+var server *grpc.Server
+var lis net.Listener
+
+func loadAndServe(address string, port int, fileName string) (err error){
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	// parse page config
-	pcPages, err := pageconfig.NewPageConfig(*pageConfigFile)
+	pcPages, err := pageconfig.NewPageConfig(fileName)
 	if err != nil {
-		log.Printf("error parsing page config file: '%s'\n", err.Error())
-		os.Exit(1)
+		log.Printf("error parsing page config file '%s': err = '%s'\n", fileName, err.Error())
+		return err
 	}
 	var opts []grpc.ServerOption
-	grpcServer := grpc.NewServer(opts...)
+	server = grpc.NewServer(opts...)
 	f := newFeedServer(pcPages)
-	pb.RegisterFeedServer(grpcServer, *f)
+	pb.RegisterFeedServer(server, *f)
 	s := newPageServer(pcPages)
-	pb.RegisterPageServer(grpcServer, *s)
-	grpcServer.Serve(lis)
+	pb.RegisterPageServer(server, *s)
+	err = server.Serve(lis)
+	if err != nil {
+		return err
+	}
 	log.Println("Server listening")
+	return err
+}
+
+func main() {
+	flag.Parse()
+	// creates a new file watcher
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatalf("ERROR: %v", err)
+	}
+	defer watcher.Close()
+	if err := watcher.Add(*pageConfigFile); err != nil {
+		log.Fatalf("ERROR: %v", err)
+	}
+	done := make(chan struct{})
+	go fileWatcher(watcher, *address, *port, done)
+	err = loadAndServe(*address, *port, *pageConfigFile)
+	if err != nil {
+		log.Fatalf("ERROR: %v", err)
+	}
+	<-done
+	log.Println("exiting")
 }
