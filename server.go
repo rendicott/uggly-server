@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"time"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	pb "github.com/rendicott/uggly"
@@ -12,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"time"
 )
 
 var (
@@ -23,6 +23,8 @@ var (
 	port           = flag.Int("port", 10000, "The server port")
 	pageConfigFile = flag.String("pages", "pages.yml", "yaml file containing page definitions")
 )
+
+var version string
 
 /* pageServerPage holds elements required by the protobuf definition for a page which
 includes its elemntal properties
@@ -181,19 +183,19 @@ func newPageServer(pc *pageconfig.Pages) *pageServer {
 func fileWatcher(watcher *fsnotify.Watcher, addr string, port int, done chan struct{}) {
 	for {
 		log.Println("watching for file events")
-		time.Sleep(50*time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 		select {
 		// watch for events
 		case event := <-watcher.Events:
 			if event.Op.String() == "CHMOD" {
-				time.Sleep(1*time.Second)
+				time.Sleep(1 * time.Second)
 				if server != nil {
 					log.Println("detected file change, stopping server")
 					server.GracefulStop()
 					go loadAndServe(addr, port, event.Name)
 				}
 				// start watching the file again since I guess
-				// you only get one event then in deregisters. Dumb.	
+				// you only get one event then in deregisters. Dumb.
 				watcher.Add(event.Name)
 			}
 		case err := <-watcher.Errors:
@@ -207,7 +209,7 @@ func fileWatcher(watcher *fsnotify.Watcher, addr string, port int, done chan str
 var server *grpc.Server
 var lis net.Listener
 
-func loadAndServe(address string, port int, fileName string) (err error){
+func loadAndServe(address string, port int, fileName string) (err error) {
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -233,6 +235,7 @@ func loadAndServe(address string, port int, fileName string) (err error){
 }
 
 func main() {
+	log.Printf("uggly-server v%s", version)
 	flag.Parse()
 	// creates a new file watcher
 	watcher, err := fsnotify.NewWatcher()

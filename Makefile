@@ -43,3 +43,5 @@ clean:
 		rm -rf $(build_dir_mac)
 		rm -rf $(build_dir_windows)		 
 
+release:
+		gh release create v$(version) ./output/*$(version).tar.gz
