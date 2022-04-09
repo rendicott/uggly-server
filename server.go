@@ -9,15 +9,16 @@ import (
 	pb "github.com/rendicott/uggly"
 	"github.com/rendicott/uggly-server/pageconfig"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"log"
 	"net"
 	"time"
 )
 
 var (
-	//	tls            = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	//	certFile       = flag.String("cert_file", "", "The TLS cert file")
-	//	keyFile        = flag.String("key_file", "", "The TLS key file")
+	tls      = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	certFile = flag.String("cert_file", "", "The TLS cert file")
+	keyFile  = flag.String("key_file", "", "The TLS key file")
 	//	jsonDBFile     = flag.String("json_db_file", "", "A json file containing a list of features")
 	address        = flag.String("address", "localhost", "the interface address to listen on. Setting to '0.0.0.0' will listen on all interfaces but some OS's might be touchy about this")
 	port           = flag.Int("port", 10000, "The server port")
@@ -93,7 +94,7 @@ func newFeedServer(pc *pageconfig.Pages) *feedServer {
 	for _, page := range pc.Pages {
 		sListing := &pb.PageListing{}
 		sListing.Name = page.Name
-		fmt.Printf("Have page name: %s\n", page.Name)
+		log.Printf("Have page name: %s\n", page.Name)
 		// ./server.go:82:17: first argument to append must be slice; have *uggly.Pages
 		fServer.pages = append(fServer.pages, sListing)
 	}
@@ -209,6 +210,8 @@ func fileWatcher(watcher *fsnotify.Watcher, addr string, port int, done chan str
 var server *grpc.Server
 var lis net.Listener
 
+var serverOptions []grpc.ServerOption
+
 func loadAndServe(address string, port int, fileName string) (err error) {
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
 	if err != nil {
@@ -220,8 +223,7 @@ func loadAndServe(address string, port int, fileName string) (err error) {
 		log.Printf("error parsing page config file '%s': err = '%s'\n", fileName, err.Error())
 		return err
 	}
-	var opts []grpc.ServerOption
-	server = grpc.NewServer(opts...)
+	server = grpc.NewServer(serverOptions...)
 	f := newFeedServer(pcPages)
 	pb.RegisterFeedServer(server, *f)
 	s := newPageServer(pcPages)
@@ -235,8 +237,20 @@ func loadAndServe(address string, port int, fileName string) (err error) {
 }
 
 func main() {
+	if version == "" {
+		version = "0.0.0"
+	}
 	log.Printf("uggly-server v%s", version)
 	flag.Parse()
+	if *tls {
+		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
+		if err != nil {
+			log.Fatalf("ERROR with TLS cert: %v", err)
+		}
+		serverOptions = append(serverOptions, grpc.Creds(creds))
+	} else {
+		log.Println("No TLS options specified, running insecure")
+	}
 	// creates a new file watcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
