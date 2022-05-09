@@ -27,23 +27,12 @@ var (
 
 var version string
 
-/* pageServerPage holds elements required by the protobuf definition for a page which
-includes its elemntal properties
-*/
-type pageServerPage struct {
-	name     string
-	links    []*pb.Link
-	divBoxes *pb.DivBoxes
-	elements *pb.Elements
-	response *pb.PageResponse
-}
-
 /* pageServer is a struct from which to attach the required methods for the Page Service
 as defined in the protobuf definition
 */
 type pageServer struct {
 	pb.UnimplementedPageServer
-	pages []*pageServerPage
+	pages []*pb.PageResponse
 }
 
 /* feedServer is a struct from which to attach the required methods for the Feed Service
@@ -73,10 +62,9 @@ a PageResponse which the client will process and display on the client's pcreen.
 func (s pageServer) GetPage(ctx context.Context, preq *pb.PageRequest) (presp *pb.PageResponse, err error) {
 	found := false
 	for _, page := range s.pages {
-		if page.name == preq.Name {
+		if page.Name == preq.Name {
 			found = true
-			page.response.Name = page.name
-			return page.response, err
+			return page, err
 		}
 	}
 	if !found {
@@ -107,18 +95,23 @@ required so that the GetPage method can adequately respond with a PageResponse.
 func newPageServer(pc *pageconfig.Pages) *pageServer {
 	pServer := &pageServer{}
 	for i := range pc.Pages {
-		psp := pageServerPage{}
-		psp.name = pc.Pages[i].Name
-		psp.divBoxes = &pb.DivBoxes{}
-		psp.links = make([]*pb.Link, 0)
+		psp := &pb.PageResponse{}
+		psp.Name = pc.Pages[i].Name
+		psp.DivBoxes = &pb.DivBoxes{}
+		psp.KeyStrokes = make([]*pb.KeyStroke, 0)
 		for _, plink := range pc.Pages[i].Links {
-			ulink := pb.Link{
+			ks := pb.KeyStroke{
 				KeyStroke: plink.KeyStroke,
-				PageName:  plink.PageName,
-				Server:    plink.Server,
-				Port:      plink.Port,
+				Action: &pb.KeyStroke_Link{
+					Link: &pb.Link{
+						KeyStroke: plink.KeyStroke,
+						PageName:  plink.PageName,
+						Server:    plink.Server,
+						Port:      plink.Port,
+					},
+				},
 			}
-			psp.links = append(psp.links, &ulink)
+			psp.KeyStrokes = append(psp.KeyStrokes, &ks)
 		}
 		for _, pbox := range pc.Pages[i].DivBoxes {
 			ubox := pb.DivBox{
@@ -146,10 +139,10 @@ func newPageServer(pc *pageconfig.Pages) *pageServer {
 					Attr: pbox.FillSt.Attr,
 				}
 			}
-			psp.divBoxes.Boxes = append(psp.divBoxes.Boxes, &ubox)
+			psp.DivBoxes.Boxes = append(psp.DivBoxes.Boxes, &ubox)
 		}
-		log.Printf("have divboxes of len %d\n", len(psp.divBoxes.Boxes))
-		psp.elements = &pb.Elements{}
+		log.Printf("have divboxes of len %d\n", len(psp.DivBoxes.Boxes))
+		psp.Elements = &pb.Elements{}
 		for _, sele := range pc.Pages[i].Elements {
 			for _, pblob := range sele.TextBlobs {
 				ublob := pb.TextBlob{
@@ -163,20 +156,13 @@ func newPageServer(pc *pageconfig.Pages) *pageServer {
 						Bg: pblob.Style.Bg,
 					}
 				}
-				psp.elements.TextBlobs = append(
-					psp.elements.TextBlobs, &ublob)
+				psp.Elements.TextBlobs = append(
+					psp.Elements.TextBlobs, &ublob)
 			}
 		}
-		log.Printf("have textblobs of len %d\n", len(psp.elements.TextBlobs))
+		log.Printf("have textblobs of len %d\n", len(psp.Elements.TextBlobs))
 		// now pre-build the response
-		psp.response = &pb.PageResponse{}
-		psp.response.DivBoxes = &pb.DivBoxes{}
-		psp.response.Elements = &pb.Elements{}
-		psp.response.Links = make([]*pb.Link, 0)
-		psp.response.DivBoxes = psp.divBoxes
-		psp.response.Elements = psp.elements
-		psp.response.Links = psp.links
-		pServer.pages = append(pServer.pages, &psp)
+		pServer.pages = append(pServer.pages, psp)
 	}
 	return pServer
 }

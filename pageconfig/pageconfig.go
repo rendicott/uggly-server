@@ -53,7 +53,7 @@ type Pages struct {
 }
 
 // NewPageConfig takes a yaml filename as input and
-// attempts to parse it int32o a config object.
+// attempts to parse it into a config object.
 func NewPageConfig(filename string) (*Pages, error) {
 	var err error
 	pc := Pages{}
