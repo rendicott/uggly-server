@@ -13,7 +13,7 @@ Similar to Apache, this server takes a file parameter for a YML file that contai
 2. Next you'll need to locate or generate a YML file with some content. There is a fairly complex example in this repo called `pages.yml` which you'll want to put somewhere on disk so you can pass it in as a param. 
 3. Run the server with the command `./ugglys -port 8888 -pages pages.yml`
 4. If you haven't already, make sure you download the [client](http://github.com/rendicott/uggly-client)
-5. Start the client with the command `./ugglyc -server localhost -port 8888 -page fancy-home`
+5. Start the client with the command `./ugglyc -UGRI ugtp://localhost:8888/fancy-home`
 6. You should see the pages rendered as in the following screenshot
   * ![](ugglys.png)
 7. Navigate the site using the keyboard (e.g., press `a` to go to the about page.)
